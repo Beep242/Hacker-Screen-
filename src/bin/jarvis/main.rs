@@ -12,11 +12,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod hud;
+mod orb;
 mod telemetry;
 mod text;
 
 use macroquad::prelude::*;
 
+use orb::CodeOrb;
 use telemetry::Telemetry;
 
 const RIPPLE_MAX: f32 = 1.0;
@@ -65,6 +67,7 @@ fn format_timestamp(t: f64) -> String {
 struct App {
     font: Option<Font>,
     telemetry: Telemetry,
+    orb: CodeOrb,
     start_time: f64,
     ripple_life: f32,
 }
@@ -74,6 +77,7 @@ impl App {
         Self {
             font,
             telemetry: Telemetry::new(),
+            orb: CodeOrb::new(220),
             start_time: get_time(),
             ripple_life: 0.0,
         }
@@ -81,6 +85,7 @@ impl App {
 
     fn update(&mut self, dt: f32) {
         self.telemetry.update(dt);
+        self.orb.update(dt);
         if self.ripple_life > 0.0 {
             self.ripple_life -= dt;
         }
@@ -104,7 +109,8 @@ impl App {
         let cy = h / 2.0 + 10.0;
         hud::draw_rings(cx, cy, t);
         hud::draw_sweep(cx, cy, 230.0, t);
-        hud::draw_core(cx, cy, t, if self.ripple_life > 0.0 { 0.4 } else { 0.0 });
+        let energy = (self.ripple_life / RIPPLE_MAX).clamp(0.0, 1.0);
+        self.orb.draw(font, cx, cy, t, energy);
         hud::draw_ripple(cx, cy, self.ripple_life, RIPPLE_MAX);
 
         hud::draw_corner_brackets(w, h);

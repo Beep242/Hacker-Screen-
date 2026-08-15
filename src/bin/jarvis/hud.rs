@@ -92,15 +92,6 @@ pub fn draw_sweep(cx: f32, cy: f32, radius: f32, t: f32) {
     );
 }
 
-pub fn draw_core(cx: f32, cy: f32, t: f32, pulse_boost: f32) {
-    let pulse = (0.55 + 0.35 * (t * 2.0).sin() + pulse_boost).max(0.0);
-    draw_circle(cx, cy, 32.0, Color::new(0.15, 0.55, 0.7, 0.12 * pulse));
-    draw_circle_lines(cx, cy, 32.0, 2.0, Color::new(0.4, 0.95, 1.0, 0.8));
-    draw_poly_lines(cx, cy, 6, 22.0, (t * 26.0) % 360.0, 1.4, Color::new(0.5, 1.0, 1.0, 0.65));
-    draw_poly_lines(cx, cy, 6, 13.0, -(t * 40.0) % 360.0, 1.2, Color::new(0.6, 1.0, 1.0, 0.55));
-    draw_circle(cx, cy, 4.5, Color::new(0.85, 1.0, 1.0, 0.95));
-}
-
 pub fn draw_ripple(cx: f32, cy: f32, life: f32, max_life: f32) {
     if life <= 0.0 {
         return;

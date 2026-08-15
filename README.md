@@ -18,8 +18,9 @@ cargo run --release --bin hacker_screen
 ## jarvis
 
 A circular holographic HUD in the Iron Man / JARVIS vein — rotating
-instrument rings, a radar sweep, a pulsing core, live-drifting telemetry
-gauges, and an audio waveform.
+instrument rings, a radar sweep, a rotating 3D wireframe code orb at the
+center (a sphere of shifting glyphs that breathes like it's alive),
+live-drifting telemetry gauges, and an audio waveform.
 
 ```
 cargo run --release --bin jarvis
