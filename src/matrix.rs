@@ -4,6 +4,7 @@ use macroquad::prelude::*;
 use macroquad::rand::gen_range;
 
 use crate::data::random_matrix_char;
+use crate::text::text;
 
 struct Column {
     x: f32,
@@ -62,7 +63,7 @@ impl MatrixRain {
         }
     }
 
-    pub fn draw(&self, screen_h: f32, dim: f32) {
+    pub fn draw(&self, font: Option<&Font>, screen_h: f32, dim: f32) {
         for c in &self.columns {
             for i in 0..c.length {
                 let cy = c.y - i as f32 * self.font_size;
@@ -72,11 +73,11 @@ impl MatrixRain {
                 let ch = random_matrix_char();
                 let fade = 1.0 - (i as f32 / c.length as f32);
                 let color = if i == 0 {
-                    Color::new(0.75, 1.0, 0.8, dim)
+                    Color::new(0.65, 0.9, 0.7, 0.8 * dim)
                 } else {
-                    Color::new(0.0, 1.0, 0.35, fade * 0.85 * dim)
+                    Color::new(0.0, 0.85, 0.3, fade * 0.65 * dim)
                 };
-                draw_text(&ch.to_string(), c.x, cy, self.font_size, color);
+                text(font, &ch.to_string(), c.x, cy, self.font_size, color);
             }
         }
     }
