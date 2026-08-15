@@ -57,15 +57,6 @@ const ERROR_MESSAGES: &[&str] = &[
     "Rate limited by {ip}, backing off",
 ];
 
-const BANNER_MESSAGES: &[&str] = &[
-    "ACCESS GRANTED",
-    "ROOT ACCESS OBTAINED",
-    "BREACH COMPLETE",
-    "FIREWALL DOWN",
-    "ENCRYPTION DEFEATED",
-    "UPLINK SECURED",
-];
-
 const TARGETS: &[&str] = &[
     "firewall", "mainframe", "kernel", "root partition", "encryption keys", "auth server",
     "proxy chain", "database cluster", "backdoor daemon", "session token", "SSH tunnel",
@@ -156,10 +147,6 @@ pub fn random_log_entry() -> (LineKind, String) {
             ),
         ),
     }
-}
-
-pub fn random_banner_message() -> &'static str {
-    BANNER_MESSAGES[gen_range(0, BANNER_MESSAGES.len())]
 }
 
 pub fn random_target() -> &'static str {

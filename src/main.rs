@@ -1,8 +1,8 @@
 //! hacker_screen — a fake "hacking in progress" screen: matrix rain, a
 //! scrolling exploit log styled like a real terminal session, a live hex
-//! dump, and a progress bar that periodically flashes a breach banner.
+//! dump, and a progress bar that rolls from target to target.
 //!
-//! Controls: SPACE forces an immediate breach flash, ESC quits.
+//! Controls: SPACE fast-forwards the current breach, ESC quits.
 
 // Rust binaries default to the console subsystem on Windows, which pops up
 // a terminal window alongside the graphical one when double-clicked from
@@ -27,7 +27,6 @@ use matrix::MatrixRain;
 use ui::LogLine;
 
 const MAX_LOG_LINES: usize = 60;
-const FLASH_DURATION: f32 = 1.8;
 const HEX_ROW_H: f32 = 18.0;
 const HEX_COL_W: f32 = 24.0;
 
@@ -75,8 +74,6 @@ struct App {
     progress: f32,
     progress_target: String,
     progress_duration: f32,
-    flash_timer: f32,
-    flash_message: String,
     start_time: f64,
 }
 
@@ -98,8 +95,6 @@ impl App {
             progress: 0.0,
             progress_target: data::random_target().to_string(),
             progress_duration: gen_range(3.0, 7.0),
-            flash_timer: 0.0,
-            flash_message: String::new(),
             start_time: get_time(),
         }
     }
@@ -111,9 +106,19 @@ impl App {
         (rows, cols)
     }
 
-    fn trigger_flash(&mut self) {
-        self.flash_timer = FLASH_DURATION;
-        self.flash_message = data::random_banner_message().to_string();
+    fn complete_breach(&mut self) {
+        self.log_lines.push_back(LogLine {
+            prefix: String::new(),
+            body: format!("[+] {} compromised", self.progress_target),
+            revealed: 0,
+            color: Color::new(0.35, 1.0, 0.65, 1.0),
+        });
+        if self.log_lines.len() > MAX_LOG_LINES {
+            self.log_lines.pop_front();
+        }
+        self.progress = 0.0;
+        self.progress_target = data::random_target().to_string();
+        self.progress_duration = gen_range(3.0, 7.0);
     }
 
     fn update(&mut self, dt: f32) {
@@ -164,23 +169,12 @@ impl App {
             self.typing_timer -= REVEAL_INTERVAL;
         }
 
-        if self.flash_timer <= 0.0 {
-            self.progress += dt / self.progress_duration * 100.0;
-            if self.progress >= 100.0 {
-                self.progress = 100.0;
-                self.trigger_flash();
-            }
-        } else {
-            self.flash_timer -= dt;
-            if self.flash_timer <= 0.0 {
-                self.progress = 0.0;
-                self.progress_target = data::random_target().to_string();
-                self.progress_duration = gen_range(3.0, 7.0);
-            }
-        }
-
+        self.progress += dt / self.progress_duration * 100.0;
         if is_key_pressed(KeyCode::Space) {
-            self.trigger_flash();
+            self.progress = 100.0;
+        }
+        if self.progress >= 100.0 {
+            self.complete_breach();
         }
     }
 
@@ -192,8 +186,7 @@ impl App {
 
         clear_background(BLACK);
 
-        let matrix_dim = if self.flash_timer > 0.0 { 0.35 } else { 1.0 };
-        self.matrix.draw(font, h, matrix_dim);
+        self.matrix.draw(font, h, 1.0);
 
         ui::draw_header(font, &self.hostname, elapsed, w);
 
@@ -221,10 +214,6 @@ impl App {
         );
 
         ui::draw_scanlines(w, h);
-
-        if self.flash_timer > 0.0 {
-            ui::draw_flash(font, w, h, &self.flash_message, self.flash_timer, FLASH_DURATION);
-        }
     }
 }
 

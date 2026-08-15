@@ -1,11 +1,9 @@
 //! Drawing helpers for the HUD layered on top of the matrix rain: the status
-//! line, the fake exploit log, the ASCII progress bar, and the full-screen
-//! "breach" banner.
+//! line, the fake exploit log, and the ASCII progress bar.
 
 use std::collections::VecDeque;
 
 use macroquad::prelude::*;
-use macroquad::rand::gen_range;
 
 use crate::text::{measure, text};
 
@@ -117,35 +115,5 @@ pub fn draw_scanlines(screen_w: f32, screen_h: f32) {
     while y < screen_h {
         draw_rectangle(0.0, y, screen_w, 1.0, Color::new(0.0, 0.0, 0.0, 0.08));
         y += 3.0;
-    }
-}
-
-pub fn draw_flash(font: Option<&Font>, screen_w: f32, screen_h: f32, message: &str, life: f32, max_life: f32) {
-    let alpha = (life / max_life).clamp(0.0, 1.0);
-    draw_rectangle(0.0, 0.0, screen_w, screen_h, Color::new(0.0, 0.0, 0.0, 0.4 * alpha));
-
-    let font_size = 32.0;
-    let border = "=".repeat(message.len() + 8);
-    let mid = format!("    {message}    ");
-    let lines = [border.as_str(), mid.as_str(), border.as_str()];
-    let line_h = font_size * 1.3;
-    let total_h = line_h * lines.len() as f32;
-    let mut cy = screen_h / 2.0 - total_h / 2.0 + font_size;
-    for line in lines {
-        let dims = measure(font, line, font_size);
-        let cx = (screen_w - dims.width) / 2.0;
-        text(font, line, cx, cy, font_size, Color::new(0.35, 1.0, 0.5, alpha));
-        cy += line_h;
-    }
-
-    if gen_range(0, 3) == 0 {
-        let gy = gen_range(0.0, screen_h);
-        draw_rectangle(
-            0.0,
-            gy,
-            screen_w,
-            gen_range(2.0, 5.0),
-            Color::new(0.3, 1.0, 0.5, 0.18 * alpha),
-        );
     }
 }
