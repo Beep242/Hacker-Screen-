@@ -109,6 +109,22 @@ impl App {
         let cy = h / 2.0 + 10.0;
         hud::draw_rings(cx, cy, t);
         hud::draw_sweep(cx, cy, 230.0, t);
+
+        let spoke_color = Color::new(0.3, 0.75, 0.95, 0.4);
+        let ram_pos = (cx - 360.0, cy - 200.0);
+        let thermal_pos = (cx + 360.0, cy - 200.0);
+        hud::draw_spoke(cx, cy, 230.0, ram_pos.0, ram_pos.1, 38.0, spoke_color);
+        hud::draw_spoke(cx, cy, 230.0, thermal_pos.0, thermal_pos.1, 38.0, spoke_color);
+        hud::draw_ring_gauge(font, ram_pos.0, ram_pos.1, 38.0, "RAM", self.telemetry.ram.value);
+        hud::draw_ring_gauge(
+            font,
+            thermal_pos.0,
+            thermal_pos.1,
+            38.0,
+            "THERMAL",
+            self.telemetry.thermal.value,
+        );
+
         let energy = (self.ripple_life / RIPPLE_MAX).clamp(0.0, 1.0);
         self.orb.draw(font, cx, cy, t, energy);
         hud::draw_ripple(cx, cy, self.ripple_life, RIPPLE_MAX);
@@ -165,6 +181,16 @@ impl App {
 
         hud::draw_waveform(w / 2.0 - 160.0, h - 90.0, 320.0, t, 28);
 
+        hud::draw_sparkline(
+            font,
+            w - 360.0,
+            h - 170.0,
+            280.0,
+            50.0,
+            "NET I/O",
+            &self.telemetry.net_history,
+        );
+
         let ticker_line = format!("\u{bb} {}", self.telemetry.ticker);
         text::text(font, &ticker_line, 40.0, h - 40.0, 14.0, Color::new(0.4, 0.85, 0.95, 0.7));
 
@@ -175,6 +201,17 @@ impl App {
             h - 16.0,
             13.0,
             Color::new(0.3, 0.6, 0.7, 0.6),
+        );
+
+        let wordmark = "AEGIS CORE SYSTEMS";
+        let wm_dims = text::measure(font, wordmark, 13.0);
+        text::text(
+            font,
+            wordmark,
+            w - wm_dims.width - 40.0,
+            h - 16.0,
+            13.0,
+            Color::new(0.3, 0.6, 0.7, 0.55),
         );
     }
 }

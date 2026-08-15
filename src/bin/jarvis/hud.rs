@@ -1,7 +1,10 @@
 //! Drawing primitives for the circular HUD: background grid, corner
 //! brackets, rotating instrument rings, the radar sweep, the pulsing core,
-//! gauges, and the audio waveform. Built entirely from macroquad's
-//! `draw_arc`/`draw_poly` family so nothing here needs external assets.
+//! gauges, the audio waveform, and the satellite-widget connector spokes.
+//! Built entirely from macroquad's `draw_arc`/`draw_poly` family so nothing
+//! here needs external assets.
+
+use std::collections::VecDeque;
 
 use macroquad::prelude::*;
 
@@ -61,12 +64,38 @@ pub fn draw_rings(cx: f32, cy: f32, t: f32) {
     draw_circle_lines(cx, cy, r1, 1.2, Color::new(0.3, 0.75, 1.0, 0.3));
     draw_ticks(cx, cy, r1, 10.0, 72, t * 6.0, Color::new(0.35, 0.9, 1.0, 0.5));
 
+    // Dense fine-toothed comb ring for the busier instrument-cluster look.
+    let r_comb = 204.0;
+    draw_circle_lines(cx, cy, r_comb, 0.8, Color::new(0.3, 0.8, 1.0, 0.2));
+    draw_ticks(cx, cy, r_comb, 5.0, 140, t * -9.0, Color::new(0.4, 0.9, 1.0, 0.3));
+
     let r2 = 178.0;
     draw_dashed_ring(cx, cy, r2, 40, -(t * 16.0), Color::new(0.3, 0.85, 1.0, 0.55));
 
     let r3 = 128.0;
     draw_circle_lines(cx, cy, r3, 1.0, Color::new(0.3, 0.8, 1.0, 0.35));
     draw_ticks(cx, cy, r3, 7.0, 36, -(t * 24.0), Color::new(0.4, 0.95, 1.0, 0.55));
+}
+
+/// Draws a connector "trace" between the central hub's outer ring and a
+/// satellite widget's edge, with a small solder-pad dot at each end —
+/// the circuit-board look from Rainmeter-style HUD skins.
+pub fn draw_spoke(cx: f32, cy: f32, hub_r: f32, sat_x: f32, sat_y: f32, sat_r: f32, color: Color) {
+    let dx = sat_x - cx;
+    let dy = sat_y - cy;
+    let dist = (dx * dx + dy * dy).sqrt();
+    if dist < hub_r + sat_r {
+        return;
+    }
+    let ux = dx / dist;
+    let uy = dy / dist;
+    let x0 = cx + ux * hub_r;
+    let y0 = cy + uy * hub_r;
+    let x1 = sat_x - ux * sat_r;
+    let y1 = sat_y - uy * sat_r;
+    draw_line(x0, y0, x1, y1, 1.2, color);
+    draw_circle(x0, y0, 2.5, color);
+    draw_circle(x1, y1, 2.5, color);
 }
 
 pub fn draw_sweep(cx: f32, cy: f32, radius: f32, t: f32) {
@@ -142,6 +171,27 @@ pub fn draw_ring_gauge(font: Option<&Font>, cx: f32, cy: f32, r: f32, label: &st
         12.0,
         Color::new(0.5, 0.85, 0.95, 0.75),
     );
+}
+
+pub fn draw_sparkline(font: Option<&Font>, x: f32, y: f32, w: f32, h: f32, label: &str, values: &VecDeque<f32>) {
+    text(font, label, x, y - 8.0, 13.0, Color::new(0.5, 0.85, 0.95, 0.8));
+    draw_rectangle(x, y, w, h, Color::new(0.0, 0.05, 0.07, 0.4));
+    draw_rectangle_lines(x, y, w, h, 1.0, Color::new(0.25, 0.6, 0.75, 0.4));
+
+    if values.len() < 2 {
+        return;
+    }
+    let max = 100.0;
+    let step = w / (values.len() as f32 - 1.0);
+    let mut prev: Option<(f32, f32)> = None;
+    for (i, v) in values.iter().enumerate() {
+        let px = x + i as f32 * step;
+        let py = y + h - (v / max).clamp(0.0, 1.0) * h;
+        if let Some((lx, ly)) = prev {
+            draw_line(lx, ly, px, py, 1.4, Color::new(0.35, 0.9, 1.0, 0.8));
+        }
+        prev = Some((px, py));
+    }
 }
 
 pub fn draw_waveform(x: f32, y: f32, w: f32, t: f32, bars: usize) {
