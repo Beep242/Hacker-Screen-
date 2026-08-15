@@ -4,6 +4,12 @@
 //!
 //! Controls: SPACE forces an immediate breach flash, ESC quits.
 
+// Rust binaries default to the console subsystem on Windows, which pops up
+// a terminal window alongside the graphical one when double-clicked from
+// Explorer. Suppress it in release builds; keep it in debug so `cargo run`
+// still shows panics/eprintln in the terminal.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 mod data;
 mod hex;
 mod matrix;
