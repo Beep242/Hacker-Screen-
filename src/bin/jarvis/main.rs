@@ -36,13 +36,15 @@ fn window_conf() -> Conf {
     }
 }
 
-/// Try a handful of monospace fonts that ship with Windows, in order of
-/// preference. Falls back to macroquad's default font if none are found.
+/// Try a handful of fonts that ship with Windows, in order of preference.
+/// Bahnschrift (a geometric technical sans) reads far more HUD-like than a
+/// code-editor monospace font; Segoe UI and Consolas are fallbacks. Falls
+/// back to macroquad's default font if none are found.
 fn load_system_font() -> Option<Font> {
     const CANDIDATES: &[&str] = &[
+        "C:/Windows/Fonts/bahnschrift.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
         "C:/Windows/Fonts/consola.ttf",
-        "C:/Windows/Fonts/CascadiaMono.ttf",
-        "C:/Windows/Fonts/lucon.ttf",
     ];
     for path in CANDIDATES {
         if let Ok(bytes) = std::fs::read(path) {
@@ -103,27 +105,29 @@ impl App {
 
         clear_background(Color::new(0.0, 0.02, 0.03, 1.0));
 
+        hud::draw_starfield(w, h, t, 180);
         hud::draw_grid(w, h);
+        hud::draw_edge_meter(16.0, h * 0.15, h * 0.7, 44, t, 6.0);
+        hud::draw_edge_meter(w - 16.0, h * 0.15, h * 0.7, 44, t, -5.0);
 
         let cx = w / 2.0;
         let cy = h / 2.0 + 10.0;
         hud::draw_rings(cx, cy, t);
         hud::draw_sweep(cx, cy, 230.0, t);
 
-        let spoke_color = Color::new(0.3, 0.75, 0.95, 0.4);
-        let ram_pos = (cx - 360.0, cy - 200.0);
-        let thermal_pos = (cx + 360.0, cy - 200.0);
-        hud::draw_spoke(cx, cy, 230.0, ram_pos.0, ram_pos.1, 38.0, spoke_color);
-        hud::draw_spoke(cx, cy, 230.0, thermal_pos.0, thermal_pos.1, 38.0, spoke_color);
-        hud::draw_ring_gauge(font, ram_pos.0, ram_pos.1, 38.0, "RAM", self.telemetry.ram.value);
-        hud::draw_ring_gauge(
-            font,
-            thermal_pos.0,
-            thermal_pos.1,
-            38.0,
-            "THERMAL",
-            self.telemetry.thermal.value,
-        );
+        let spoke_color = Color::new(0.35, 0.8, 1.0, 0.5);
+        let satellites = [
+            (cx - 360.0, cy - 200.0, "RAM", self.telemetry.ram.value),
+            (cx + 360.0, cy - 200.0, "THERMAL", self.telemetry.thermal.value),
+            (cx - 380.0, cy + 70.0, "COOLANT", self.telemetry.coolant.value),
+            (cx + 380.0, cy + 70.0, "AUX PWR", self.telemetry.aux_power.value),
+        ];
+        for (sx, sy, label, value) in satellites {
+            hud::draw_spoke(cx, cy, 230.0, sx, sy, 38.0, spoke_color);
+            hud::draw_ring_gauge(font, sx, sy, 38.0, label, value);
+        }
+
+        hud::draw_orbiters(cx, cy, t);
 
         let energy = (self.ripple_life / RIPPLE_MAX).clamp(0.0, 1.0);
         self.orb.draw(font, cx, cy, t, energy);

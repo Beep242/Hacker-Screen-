@@ -54,6 +54,8 @@ pub struct Telemetry {
     pub shield: Stat,
     pub ram: Stat,
     pub thermal: Stat,
+    pub coolant: Stat,
+    pub aux_power: Stat,
     pub net_throughput: Stat,
     pub net_history: VecDeque<f32>,
     pub lat: f32,
@@ -72,6 +74,8 @@ impl Telemetry {
             shield: Stat::new(100.0, 92.0, 100.0),
             ram: Stat::new(52.0, 35.0, 78.0),
             thermal: Stat::new(48.0, 32.0, 68.0),
+            coolant: Stat::new(62.0, 45.0, 85.0),
+            aux_power: Stat::new(78.0, 60.0, 95.0),
             net_throughput: Stat::new(30.0, 5.0, 95.0),
             net_history: VecDeque::with_capacity(NET_HISTORY_LEN),
             lat: 40.7128,
@@ -89,6 +93,8 @@ impl Telemetry {
         self.shield.update(dt);
         self.ram.update(dt);
         self.thermal.update(dt);
+        self.coolant.update(dt);
+        self.aux_power.update(dt);
         self.net_throughput.update(dt);
         self.lat += gen_range(-0.0004, 0.0004);
         self.lon += gen_range(-0.0004, 0.0004);

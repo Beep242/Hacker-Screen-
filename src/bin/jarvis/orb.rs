@@ -78,19 +78,23 @@ impl CodeOrb {
     }
 
     pub fn draw(&self, font: Option<&Font>, cx: f32, cy: f32, t: f32, energy: f32) {
-        let breathe = 1.0 + 0.06 * (t * 1.3).sin() + 0.02 * (t * 4.7).sin();
-        let radius = (108.0 + energy * 30.0) * breathe;
+        let breathe = 1.0 + 0.07 * (t * 1.3).sin() + 0.025 * (t * 4.7).sin();
+        let radius = (116.0 + energy * 32.0) * breathe;
 
         let yaw = t * 0.4;
         let pitch = (t * 0.27).sin() * 0.25;
 
+        // Layered soft glow field behind everything, then a crisp bright
+        // halo ring right at the sphere's silhouette — the "reactor" read.
         for (r, a) in [
-            (radius * 1.4, 0.02),
-            (radius * 1.15, 0.04),
-            (radius * 0.9, 0.06),
+            (radius * 1.55, 0.035),
+            (radius * 1.25, 0.06),
+            (radius * 1.02, 0.09),
         ] {
-            draw_circle(cx, cy, r, Color::new(0.15, 0.55, 0.7, a + energy * 0.03));
+            draw_circle(cx, cy, r, Color::new(0.2, 0.6, 0.75, a + energy * 0.05));
         }
+        draw_circle_lines(cx, cy, radius, 5.0, Color::new(0.3, 0.7, 0.85, 0.12 + energy * 0.1));
+        draw_circle_lines(cx, cy, radius, 2.0, Color::new(0.55, 0.95, 1.0, 0.55 + energy * 0.3));
 
         let mut projected: Vec<(f32, f32, f32, char)> = self
             .points
@@ -104,14 +108,15 @@ impl CodeOrb {
         projected.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap());
 
         for (sx, sy, depth, ch) in projected {
-            let size = 7.0 + depth * 9.0;
-            let alpha = (0.12 + depth * 0.8).min(1.0);
-            let glow = 0.55 + depth * 0.35;
-            let color = Color::new(0.35 + 0.25 * depth, 0.85 + glow * 0.1, 1.0, alpha);
+            let size = 8.0 + depth * 11.0;
+            let alpha = (0.28 + depth * 0.75).min(1.0);
+            let glow = 0.6 + depth * 0.4;
+            let color = Color::new(0.4 + 0.3 * depth, 0.9 + glow * 0.1, 1.0, alpha);
             text(font, &ch.to_string(), sx - size * 0.3, sy + size * 0.35, size, color);
         }
 
-        draw_circle(cx, cy, 5.0, Color::new(0.85, 1.0, 1.0, 0.95));
-        draw_circle_lines(cx, cy, 8.0, 1.5, Color::new(0.6, 1.0, 1.0, 0.6 + energy * 0.3));
+        draw_circle(cx, cy, 16.0, Color::new(0.3, 0.75, 0.85, 0.25 + energy * 0.2));
+        draw_circle(cx, cy, 6.0, Color::new(0.9, 1.0, 1.0, 1.0));
+        draw_circle_lines(cx, cy, 10.0, 1.8, Color::new(0.65, 1.0, 1.0, 0.75 + energy * 0.25));
     }
 }
