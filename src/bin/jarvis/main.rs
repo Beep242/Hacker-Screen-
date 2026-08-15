@@ -17,9 +17,18 @@ mod telemetry;
 mod text;
 
 use macroquad::prelude::*;
+use macroquad::rand::gen_range;
 
 use orb::CodeOrb;
 use telemetry::Telemetry;
+
+const NODE_LABELS: &[(f32, &str)] = &[
+    (-110.0, "SIGNAL RELAY"),
+    (-70.0, "NAV ARRAY"),
+    (60.0, "RECON DRONE"),
+    (90.0, "COMM UPLINK"),
+    (120.0, "DEFENSE GRID"),
+];
 
 const RIPPLE_MAX: f32 = 1.0;
 
@@ -72,6 +81,7 @@ struct App {
     orb: CodeOrb,
     start_time: f64,
     ripple_life: f32,
+    highlight_day: usize,
 }
 
 impl App {
@@ -82,6 +92,7 @@ impl App {
             orb: CodeOrb::new(220),
             start_time: get_time(),
             ripple_life: 0.0,
+            highlight_day: gen_range(1, 29),
         }
     }
 
@@ -109,6 +120,7 @@ impl App {
         hud::draw_grid(w, h);
         hud::draw_edge_meter(16.0, h * 0.15, h * 0.7, 44, t, 6.0);
         hud::draw_edge_meter(w - 16.0, h * 0.15, h * 0.7, 44, t, -5.0);
+        hud::draw_calendar_ribbon(font, w, self.highlight_day);
 
         let cx = w / 2.0;
         let cy = h / 2.0 + 10.0;
@@ -128,6 +140,11 @@ impl App {
         }
 
         hud::draw_orbiters(cx, cy, t);
+
+        let node_color = Color::new(0.4, 0.85, 1.0, 0.65);
+        for (angle, label) in NODE_LABELS {
+            hud::draw_node_label(font, cx, cy, *angle, 128.0, 250.0, label, node_color);
+        }
 
         let energy = (self.ripple_life / RIPPLE_MAX).clamp(0.0, 1.0);
         self.orb.draw(font, cx, cy, t, energy);
@@ -194,9 +211,15 @@ impl App {
             "NET I/O",
             &self.telemetry.net_history,
         );
+        let throughput = format!(
+            "UP {:.1}K   DN {:.1}K",
+            self.telemetry.net_throughput.value * 0.06,
+            self.telemetry.net_throughput.value * 0.21
+        );
+        text::text(font, &throughput, w - 240.0, h - 178.0, 12.0, Color::new(0.5, 0.85, 0.95, 0.75));
 
         let ticker_line = format!("\u{bb} {}", self.telemetry.ticker);
-        text::text(font, &ticker_line, 40.0, h - 40.0, 14.0, Color::new(0.4, 0.85, 0.95, 0.7));
+        hud::draw_control_bar(font, w / 2.0 - 220.0, h - 58.0, 440.0, 30.0, &ticker_line);
 
         text::text(
             font,

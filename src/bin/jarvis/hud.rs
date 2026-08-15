@@ -290,3 +290,83 @@ pub fn draw_edge_meter(x: f32, top: f32, height: f32, segments: usize, t: f32, s
         draw_line(x, y, x, y + seg_h * 0.6, 2.0, color);
     }
 }
+
+/// A thin strip of day cells across the top of the screen with one
+/// highlighted — purely decorative dashboard chrome, not tied to the real
+/// calendar (this app never reads system time beyond its own uptime).
+pub fn draw_calendar_ribbon(font: Option<&Font>, screen_w: f32, highlight_day: usize) {
+    let x0 = 30.0;
+    let x1 = screen_w - 30.0;
+    let cells = 30;
+    let cell_w = (x1 - x0) / cells as f32;
+    let y = 10.0;
+    for i in 0..cells {
+        let day = i + 1;
+        let cx = x0 + i as f32 * cell_w;
+        let is_hl = day == highlight_day;
+        if is_hl {
+            draw_rectangle(cx, y - 2.0, cell_w - 2.0, 15.0, Color::new(0.3, 0.85, 1.0, 0.55));
+        }
+        let label = format!("{day:02}");
+        let color = if is_hl {
+            Color::new(0.03, 0.08, 0.1, 1.0)
+        } else {
+            Color::new(0.4, 0.7, 0.85, 0.5)
+        };
+        text(font, &label, cx + 1.0, y + 10.0, 11.0, color);
+    }
+}
+
+/// A small labeled node hanging off the instrument ring by a short spoke —
+/// the "linked systems" list look from Rainmeter HUD skins, minus any
+/// pretense that these are real running processes.
+pub fn draw_node_label(
+    font: Option<&Font>,
+    cx: f32,
+    cy: f32,
+    angle_deg: f32,
+    inner_r: f32,
+    outer_r: f32,
+    label: &str,
+    color: Color,
+) {
+    let rad = angle_deg.to_radians();
+    let (s, c) = rad.sin_cos();
+    let x0 = cx + c * inner_r;
+    let y0 = cy + s * inner_r;
+    let x1 = cx + c * outer_r;
+    let y1 = cy + s * outer_r;
+    glow_line(x0, y0, x1, y1, 1.0, color);
+    draw_circle(x1, y1, 2.5, color);
+    let font_size = 13.0;
+    let dims = measure(font, label, font_size);
+    let tx = if c < -0.15 {
+        x1 - dims.width - 8.0
+    } else if c > 0.15 {
+        x1 + 8.0
+    } else {
+        x1 - dims.width / 2.0
+    };
+    text(font, label, tx, y1 + 4.0, font_size, color);
+}
+
+/// A decorative playback-style control bar (no real media behind it) with
+/// a status label — the "console completeness" touch from the reference
+/// skins' bottom bar.
+pub fn draw_control_bar(font: Option<&Font>, x: f32, y: f32, w: f32, h: f32, label: &str) {
+    draw_rectangle(x, y, w, h, Color::new(0.0, 0.07, 0.1, 0.55));
+    draw_rectangle_lines(x, y, w, h, 1.2, Color::new(0.3, 0.7, 0.9, 0.55));
+
+    let cy = y + h / 2.0;
+    let color = Color::new(0.55, 0.95, 1.0, 0.9);
+    let mut cx = x + 18.0;
+    draw_triangle(Vec2::new(cx + 8.0, cy - 7.0), Vec2::new(cx + 8.0, cy + 7.0), Vec2::new(cx, cy), color);
+    draw_triangle(Vec2::new(cx, cy - 7.0), Vec2::new(cx, cy + 7.0), Vec2::new(cx - 8.0, cy), color);
+    cx += 28.0;
+    draw_triangle(Vec2::new(cx, cy - 8.0), Vec2::new(cx, cy + 8.0), Vec2::new(cx + 11.0, cy), color);
+    cx += 24.0;
+    draw_triangle(Vec2::new(cx, cy - 7.0), Vec2::new(cx, cy + 7.0), Vec2::new(cx + 8.0, cy), color);
+    draw_triangle(Vec2::new(cx + 8.0, cy - 7.0), Vec2::new(cx + 8.0, cy + 7.0), Vec2::new(cx + 16.0, cy), color);
+
+    text(font, label, x + 110.0, cy + 5.0, 14.0, Color::new(0.6, 0.95, 1.0, 0.9));
+}
