@@ -22,12 +22,14 @@ use macroquad::rand::gen_range;
 use orb::CodeOrb;
 use telemetry::Telemetry;
 
-const NODE_LABELS: &[(f32, &str)] = &[
-    (-110.0, "SIGNAL RELAY"),
-    (-70.0, "NAV ARRAY"),
-    (60.0, "RECON DRONE"),
-    (90.0, "COMM UPLINK"),
-    (120.0, "DEFENSE GRID"),
+const NODE_LABELS: &[(f32, f32, &str)] = &[
+    (-110.0, 250.0, "SIGNAL RELAY"),
+    (-70.0, 250.0, "NAV ARRAY"),
+    (60.0, 250.0, "RECON DRONE"),
+    (90.0, 250.0, "COMM UPLINK"),
+    (120.0, 250.0, "DEFENSE GRID"),
+    (-14.0, 156.0, "UPLINK STABLE"),
+    (194.0, 156.0, "MESH SYNCED"),
 ];
 
 const RIPPLE_MAX: f32 = 1.0;
@@ -142,8 +144,8 @@ impl App {
         hud::draw_orbiters(cx, cy, t);
 
         let node_color = Color::new(0.4, 0.85, 1.0, 0.65);
-        for (angle, label) in NODE_LABELS {
-            hud::draw_node_label(font, cx, cy, *angle, 128.0, 250.0, label, node_color);
+        for (angle, outer_r, label) in NODE_LABELS {
+            hud::draw_node_label(font, cx, cy, *angle, 128.0, *outer_r, label, node_color);
         }
 
         let energy = (self.ripple_life / RIPPLE_MAX).clamp(0.0, 1.0);

@@ -29,4 +29,16 @@ cargo run --release --bin jarvis
 - `SPACE` — ping the core (an expanding ripple)
 - `ESC` — quit
 
-Built with [macroquad](https://github.com/not-fl3/macroquad).
+## launcher
+
+Starts both at once on a vertically-stacked dual-monitor setup: jarvis on
+the topmost monitor, hacker_screen on the bottommost. Detects monitor
+layout via the Windows API, positions each window, then exits — no window
+of its own.
+
+```
+cargo run --release --bin launcher
+```
+
+Built with [macroquad](https://github.com/not-fl3/macroquad) and
+[windows-rs](https://github.com/microsoft/windows-rs) (launcher only).
