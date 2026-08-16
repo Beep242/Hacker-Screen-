@@ -47,6 +47,23 @@ const TICKER_PHRASES: &[&str] = &[
     "rerouting auxiliary power",
 ];
 
+const EVENT_PHRASES: &[&str] = &[
+    "Node cluster 7 responding",
+    "Cache rebuilt (14ms)",
+    "Sync complete: 4 peers",
+    "No anomalies detected",
+    "Index refresh scheduled",
+    "Latency within tolerance",
+    "Backup snapshot complete",
+    "Session token renewed",
+    "Queue depth nominal",
+    "Handshake confirmed: relay-9",
+    "Buffer flushed",
+    "Link quality stable",
+];
+
+const MAX_EVENT_LINES: usize = 8;
+
 pub struct Telemetry {
     pub power: Stat,
     pub load: Stat,
@@ -56,13 +73,19 @@ pub struct Telemetry {
     pub thermal: Stat,
     pub coolant: Stat,
     pub aux_power: Stat,
+    pub disk_usage: Stat,
+    pub gpu_load: Stat,
+    pub cache_rate: Stat,
+    pub signal: Stat,
     pub net_throughput: Stat,
     pub net_history: VecDeque<f32>,
     pub lat: f32,
     pub lon: f32,
     pub ticker: String,
+    pub events: VecDeque<String>,
     ticker_timer: f32,
     net_sample_timer: f32,
+    event_timer: f32,
 }
 
 impl Telemetry {
@@ -76,13 +99,19 @@ impl Telemetry {
             thermal: Stat::new(48.0, 32.0, 68.0),
             coolant: Stat::new(62.0, 45.0, 85.0),
             aux_power: Stat::new(78.0, 60.0, 95.0),
+            disk_usage: Stat::new(58.0, 40.0, 82.0),
+            gpu_load: Stat::new(22.0, 8.0, 65.0),
+            cache_rate: Stat::new(91.0, 78.0, 99.0),
+            signal: Stat::new(74.0, 55.0, 95.0),
             net_throughput: Stat::new(30.0, 5.0, 95.0),
             net_history: VecDeque::with_capacity(NET_HISTORY_LEN),
             lat: 40.7128,
             lon: -74.0060,
             ticker: TICKER_PHRASES[0].to_string(),
+            events: VecDeque::with_capacity(MAX_EVENT_LINES),
             ticker_timer: 3.0,
             net_sample_timer: 0.0,
+            event_timer: 1.0,
         }
     }
 
@@ -95,9 +124,23 @@ impl Telemetry {
         self.thermal.update(dt);
         self.coolant.update(dt);
         self.aux_power.update(dt);
+        self.disk_usage.update(dt);
+        self.gpu_load.update(dt);
+        self.cache_rate.update(dt);
+        self.signal.update(dt);
         self.net_throughput.update(dt);
         self.lat += gen_range(-0.0004, 0.0004);
         self.lon += gen_range(-0.0004, 0.0004);
+
+        self.event_timer -= dt;
+        if self.event_timer <= 0.0 {
+            self.events
+                .push_back(EVENT_PHRASES[gen_range(0, EVENT_PHRASES.len())].to_string());
+            if self.events.len() > MAX_EVENT_LINES {
+                self.events.pop_front();
+            }
+            self.event_timer = gen_range(1.2, 2.6);
+        }
 
         self.net_sample_timer -= dt;
         if self.net_sample_timer <= 0.0 {

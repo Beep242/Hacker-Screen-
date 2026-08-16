@@ -370,3 +370,33 @@ pub fn draw_control_bar(font: Option<&Font>, x: f32, y: f32, w: f32, h: f32, lab
 
     text(font, label, x + 110.0, cy + 5.0, 14.0, Color::new(0.6, 0.95, 1.0, 0.9));
 }
+
+/// A compact label/value readout row with a thin separator underneath —
+/// for stacking plain stat lines where a full gauge would be overkill.
+pub fn draw_stat_line(font: Option<&Font>, x: f32, y: f32, w: f32, label: &str, value: &str) {
+    text(font, label, x, y, 13.0, Color::new(0.55, 0.85, 0.95, 0.8));
+    let dims = measure(font, value, 13.0);
+    text(font, value, x + w - dims.width, y, 13.0, Color::new(0.6, 1.0, 1.0, 0.95));
+    draw_line(x, y + 6.0, x + w, y + 6.0, 1.0, Color::new(0.25, 0.55, 0.7, 0.3));
+}
+
+/// A boxed panel of stacked short lines, newest at the bottom, fading in
+/// from empty — a scrolling event/status feed for filling the wide empty
+/// gutters the reference skins fill with a news ticker.
+pub fn draw_event_log(font: Option<&Font>, x: f32, y: f32, w: f32, h: f32, label: &str, lines: &VecDeque<String>) {
+    text(font, label, x, y - 8.0, 13.0, Color::new(0.55, 0.9, 1.0, 0.85));
+    draw_rectangle(x, y, w, h, Color::new(0.0, 0.06, 0.09, 0.45));
+    draw_rectangle_lines(x, y, w, h, 1.2, Color::new(0.3, 0.7, 0.9, 0.5));
+
+    let line_h = 22.0;
+    let font_size = 12.0;
+    let mut cy = y + h - 10.0;
+    for (i, line) in lines.iter().rev().enumerate() {
+        if cy < y + 14.0 {
+            break;
+        }
+        let alpha = (1.0 - i as f32 * 0.12).max(0.2);
+        text(font, line, x + 10.0, cy, font_size, Color::new(0.5, 0.9, 1.0, alpha));
+        cy -= line_h;
+    }
+}

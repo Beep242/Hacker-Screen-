@@ -179,6 +179,18 @@ impl App {
 
         hud::draw_ring_gauge(font, 110.0, h * 0.68, 46.0, "POWER CORE", self.telemetry.power.value);
 
+        text::text(font, "SYSTEM STATUS", lx, 508.0, 13.0, Color::new(0.5, 0.85, 0.95, 0.85));
+        let mut sy = 534.0;
+        for (label, value_str) in [
+            ("DISK USAGE".to_string(), format!("{:.0}%", self.telemetry.disk_usage.value)),
+            ("GPU LOAD".to_string(), format!("{:.0}%", self.telemetry.gpu_load.value)),
+            ("CACHE HIT RATE".to_string(), format!("{:.0}%", self.telemetry.cache_rate.value)),
+            ("SIGNAL".to_string(), format!("{:.0}%", self.telemetry.signal.value)),
+        ] {
+            hud::draw_stat_line(font, lx, sy, 180.0, &label, &value_str);
+            sy += 26.0;
+        }
+
         let lat_line = format!("LAT {:>8.4} N", self.telemetry.lat);
         let lon_line = format!("LON {:>8.4} W", -self.telemetry.lon);
         let dims1 = text::measure(font, &lat_line, 14.0);
@@ -199,6 +211,8 @@ impl App {
             14.0,
             Color::new(0.5, 0.85, 0.95, 0.8),
         );
+
+        hud::draw_event_log(font, w - 360.0, 500.0, 280.0, 350.0, "EVENT LOG", &self.telemetry.events);
 
         hud::draw_waveform(w / 2.0 - 160.0, h - 90.0, 320.0, t, 28);
 
